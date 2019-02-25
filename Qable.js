@@ -1,7 +1,5 @@
 class Qable {
     constructor(iterable) {
-        if (!(Symbol.iterator in iterable))
-            throw "Qable initialized with a non-iterable: ", iterable;
         this._iterable = iterable;
         return new Proxy(this, {
             get: (target, prop, receiver) => {
@@ -13,8 +11,6 @@ class Qable {
             }
         });
     }
-
-
 
     // () => Iterable<T>
     get iterable() {
@@ -38,13 +34,8 @@ class Qable {
             last = item;
         return last;
     }
-   
-    // () => T
-    single() {
-        return this.first();
-    }
 
-    // () => 
+    // (Number) => T 
     nth(num) {
         var counter = 0;
         for (var item of this.iterable) {
@@ -54,16 +45,42 @@ class Qable {
         }
     }
 
-    slice(from, to = Infinity, step = 1) {
+    skip(n) {
         var iterable = this.iterable;
         return Qable.fromGeneratorFn(function*() {
             var counter = 0;
             for (var item of iterable) {
-                if (counter >= from && (counter - from) % step === 0)
+                if (counter >= n)
                     yield item;
                 counter++;
-                if (counter >= to)
+            }
+        });
+    }
+
+    take(n) {
+        var iterable = this.iterable;
+        return Qable.fromGeneratorFn(function*() {
+            var counter = 0;
+            for (var item of iterable) {
+                if (counter < n)
+                    yield item;
+                else
                     return;
+                counter++;
+            }
+        });
+    }
+
+
+    // (Number, [Number], [Number]) => Qable<T>
+    slice(from, to = Infinity, step = 1) {
+        var iterable = this.skip(from).take(to);
+        return Qable.fromGeneratorFn(function*() {
+            var counter = 0;
+            for (var item of iterable) {
+                if (counter % step === 0)
+                    yield item;
+                counter++;
             }
         });
     }
@@ -89,6 +106,24 @@ class Qable {
 
     toArray() {
         return Array.from(this);
+    }
+
+    toObject(keyRetriever = ([k, _]) => k, valueRetriever = ([_, v]) => v) {
+        var result = {};
+        for (item of this.iterable) {
+            const key = keyRetriever(item);
+            const value = valueRetriever(item);
+            result[key] = value;
+        }
+        return result;
+    }
+
+    toMap(keyRetriever = ([k, _]) => k, valueRetriever = ([_, v]) => v, isWeakMap = false) {
+        var kvPairs = [...this.map(item => [keyRetriever(item), valueRetriever(item)])];
+        if (isWeakMap)
+            return new WeakMap(kvPairs);
+        else
+            return new Map(kvPairs);
     }
 
     static of(iterable) {
@@ -143,11 +178,32 @@ class Qable {
         });
     }
 
+    // (A, T, Number) => Qable<A> where A: Iterable
+    reduce(reducer, acc) {
+        var iterable = this.iterable;
+        var counter = 0;
+        return Qable.fromGeneratorFn(function* () {
+            for (var item of iterable) {
+                acc = reducer(acc, item, counter);
+                counter++;
+            }
+            yield* acc;
+        });
+    }
+
+    each(action) {
+        this.map(action);
+        return this;
+    }
+
     pick(key) {
         return this.map(t => t[key]);
     }
 
     count() {
+        // some iterables return their length in constant time, like arrays
+        if (this.iterable[Symbol.length])
+            return this.iterable[Symbol.length];
         var counter = 0;
         for (var _ of this.iterable)
             counter++;
@@ -176,12 +232,51 @@ class Qable {
         });
     }
 
+    // immutable
+    push(item) {
+        return this.concat([item]);
+    }
+
+    concat(anotherIterable) {
+        var iterable = this.iterable;
+        return Qable.fromGeneratorFn(function* () {
+            yield* iterable;
+            yield* anotherIterable;
+        })
+    }
+
+    unshift(item) {
+        var iterable = this.iterable;
+        return Qable.fromGeneratorFn(function* () {
+            yield item;
+            yield* iterable;
+        })
+    }
+
+    contains(item, comparator = (a,b) => a === b) {
+        return this.some(z => comparator(item, z));
+    }
+
+    some(pred) {
+        for (var item of this.iterable)
+            if (pred(this.iterable))
+                return true;
+        return false;
+    }
+
+    every(pred) {
+        for (var item of this.iterable)
+            if (!pred(this.iterable))
+                return false;
+        return true;
+    }
+
     get [Symbol.iterator]() {
         return this.iterable[Symbol.iterator].bind(this.iterable);
     }
 
     get preview() {
-        return [...this.slice(0, 10)];
+        return this.slice(0, 10).toArray();
     }
 
     static fromGeneratorFn(generator) {
@@ -189,11 +284,11 @@ class Qable {
             [Symbol.iterator]: () => generator()
         });
     }
+
+    static extend(plugin) {
+        plugin(Qable);
+    }
 }
-
-Qable.Gen = require("./gen")(Qable);
-
-Qable.filters = require("./filters");
 Qable.query = require("./query")(Qable);
 
 module.exports = Qable;

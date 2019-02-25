@@ -32,4 +32,4 @@ const filters = [
     unaryFilter('!', a => !a)
 ];
 
-module.exports = filters;
+module.exports = Qable => Qable.filters = filters;

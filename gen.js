@@ -1,4 +1,4 @@
-module.exports = Qable => ({
+module.exports = Qable => { Qable.Gen = {
     N: Qable.fromGeneratorFn(function* () {
         var counter = 0;
         while (true) {
@@ -25,4 +25,4 @@ module.exports = Qable => ({
             }));
          });
     }
-})
+}};

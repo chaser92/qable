@@ -1,6 +1,9 @@
+const QableSymbol = require("./Qable.Symbol");
+
 class Qable {
-    constructor(iterable) {
+    constructor(iterable, isPartial) {
         this._iterable = iterable;
+        this._partial = !!isPartial;
         return new Proxy(this, {
             get: (target, prop, receiver) => {
                 if (typeof prop === "string") {
@@ -12,9 +15,44 @@ class Qable {
         });
     }
 
+    [QableSymbol.slice](from, to = Infinity, step = 1) {
+        if (this._iterable[QableSymbol.slice]) {
+            return this._iterable[QableSymbol.slice](from, to, step);
+        }
+        var iterable = this.skip(from).take(to - from);
+        return Qable.fromGeneratorFn(function *() {
+            var counter = 0;
+            for (var item of iterable) {
+                if (counter % step === 0)
+                    yield item;
+                counter++;
+            }
+        });
+    }
+
+    [QableSymbol.nth](id) {
+        if (this._iterable[QableSymbol.nth])
+            return this._iterable[QableSymbol.nth](id);
+        var counter = 0;
+        for (var item of this.iterable) {
+            if (counter === id)
+                return item;
+            counter++;
+        }
+
+    }
+
     // () => Iterable<T>
     get iterable() {
         return this._iterable;
+    }
+
+    get isPartial() {
+        return !!this._partial;
+    }
+
+    get parameter() {
+        return this._parameter;
     }
 
     // () => T
@@ -36,13 +74,8 @@ class Qable {
     }
 
     // (Number) => T 
-    nth(num) {
-        var counter = 0;
-        for (var item of this.iterable) {
-            if (counter === num)
-                return item;
-            counter++;
-        }
+    nth(id) {
+        return this[QableSymbol.nth](id);
     }
 
     skip(n) {
@@ -71,18 +104,24 @@ class Qable {
         });
     }
 
+    paginate(perPage) {
+        var iterable = this.iterable;
+        return Qable.fromGeneratorFn(function*() {
+            while (!iterable.done) {
+                yield iterable.take(perPage);
+                iterable = iterable.skip(perPage);
+            }
+        });
+    }
+
+    get done() {
+        return this._iterable[Symbol.iterator]().done;
+    }
+
 
     // (Number, [Number], [Number]) => Qable<T>
     slice(from, to = Infinity, step = 1) {
-        var iterable = this.skip(from).take(to);
-        return Qable.fromGeneratorFn(function*() {
-            var counter = 0;
-            for (var item of iterable) {
-                if (counter % step === 0)
-                    yield item;
-                counter++;
-            }
-        });
+        return this[QableSymbol.slice](from, to, step);
     }
 
     split(separator, comparator = null) {
@@ -159,19 +198,26 @@ class Qable {
     // (T => Any) => Qable<Any>
     map(mapper) {
         var iterable = this.iterable;
+        var param = this.parameter;
         return Qable.fromGeneratorFn(function* () {
-            for (var item of iterable)
-                yield mapper(item);
+            var counter = 0;
+            for (var item of iterable) {
+                yield mapper(item, counter, iterable, param);
+                counter++;
+            }
         });
     }
 
-    // (T => Boolean) => Qable<T>
-    filter(pred) {
-        var iterable = this.iterable;
-        var counter = 0;
+    // [(T => Boolean)] => Qable<T>
+    filter(preds) {
+        if (!Array.isArray(preds))
+            preds = [preds];
+        const iterable = this.iterable;
+        const param = this.parameter;
         return Qable.fromGeneratorFn(function* () {
+            var counter = 0;
             for (var item of iterable) {
-                if (pred(item, counter))
+                if (preds.some(pred => pred(item, counter, iterable, param)))
                     yield item;
                 counter++;
             }
@@ -253,6 +299,21 @@ class Qable {
         })
     }
 
+    partial() {
+        return new Qable(this, true);
+    }
+
+    apply(...args) {
+        if (args.length === 0)
+            return;
+        if (this._partial) {
+            this._partial = false;
+            this._parameter = args[0];
+        }
+        if (this.iterable instanceof Qable)
+            this.iterable.apply(args.slice(1));
+    }
+
     contains(item, comparator = (a,b) => a === b) {
         return this.some(z => comparator(item, z));
     }
@@ -272,10 +333,14 @@ class Qable {
     }
 
     get [Symbol.iterator]() {
+        if (this.isPartial)
+            throw "Unable to iterate over a partial Qable that has not been applied; use apply()";
         return this.iterable[Symbol.iterator].bind(this.iterable);
     }
 
     get preview() {
+        if (this.isPartial)
+            return "(partial)"
         return this.slice(0, 10).toArray();
     }
 
@@ -289,6 +354,7 @@ class Qable {
         plugin(Qable);
     }
 }
+Qable.Symbol = QableSymbol;
 Qable.query = require("./query")(Qable);
 
 module.exports = Qable;

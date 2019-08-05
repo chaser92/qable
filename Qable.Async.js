@@ -76,6 +76,13 @@ Qable.Async = class QableAsync extends Qable {
         });
     }
 
+    concat(iterable) {
+        return Qable.fromAsyncGeneratorFn(async function* () {
+            yield* this;
+            yield* QableAsync.asyncIterableOf(iterable);
+        });
+    }
+
     reduce(reducer, acc) {
         var iterable = this.iterable;
         var counter = 0;

@@ -13,7 +13,7 @@ const RESOLVERS = [
     { command: /^\.\[(\".*\")\]$/, fn: (obj, str) => obj[JSON.parse(str)] }
 ];
 
-module.exports = function resolve(expression, noLiterals) {
+export default function resolve(expression, noLiterals) {
     console.log("resolve", expression);
     var resolvers = noLiterals ? RESOLVERS : [...LITERALS, ...RESOLVERS];
     expression = expression.trim();

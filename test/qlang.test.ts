@@ -1,12 +1,9 @@
-const Qable = require("..");
-
-const { expect, request } = require('chai');
+import Qable from "../src";
 
 describe("Qlang Interpreter on Int Array", () => {
     const q = new Qable([1, 2, 3, 4, 5, 6, 7]);
     [
         { query: ".", result: [1,2,3,4,5,6,7] },
-//        { query: "#", result: [0,1,2,3,4,5,6] },
         { query: ".<3", result: [1,2] },
         { query: ".>3", result: [4,5,6,7] },
         { query: ".=3", result: [3] },
@@ -28,6 +25,6 @@ describe("Qlang Interpreter on Int Array", () => {
         { query: "1:5:2", result: [2,4] },
     ].forEach(({ query, result }) => { 
         it (`should yield ${result} for ${query}`, () =>
-            expect(q[query].a()).to.deep.equal(result));
+            expect((q[query] as typeof q).a()).toEqual(result));
     });
 });

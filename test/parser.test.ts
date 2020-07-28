@@ -1,6 +1,4 @@
-const { expect, request } = require('chai');
-
-const QlangInterpreter = require("../qlang");
+import QlangInterpreter from "../src/qlang";
 
 const i = new QlangInterpreter();
 
@@ -46,7 +44,7 @@ describe("Qlang Parser Good", () => {
         '#>2!',
         '.$',
         '#?$'
-    ].forEach(t => it(`should parse ${t}`, () => i.parse(t)));
+    ].forEach(t => it(`should parse ${t}`, () => expect(() => i.parse(t)).not.toThrow()));
 });
 
 describe ("Qlang Parser Bad", () => {
@@ -60,5 +58,5 @@ describe ("Qlang Parser Bad", () => {
         '"literal"',
         '!z',
     ].forEach(t => it(`should not parse ${t}`, () =>
-        expect(() => i.parse(t)).to.throw()));
+        expect(() => i.parse(t)).toThrow()));
 });

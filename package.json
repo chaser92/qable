@@ -2,18 +2,45 @@
   "name": "qable",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/src/index.js",
+  "typings": "dist/src/index.d.ts",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha test/**/*.js"
+    "build": "tsc -d --module commonjs",
+    "lint": "npx tsc --noEmit && npx eslint \"**/*.{js,ts}\" --quiet --fix",
+    "test": "npx jest --forceExit --coverage --verbose",
+    "test-all": "yarn lint && yarn test",
+    "build-n-test": "yarn install && yarn build && yarn lint && npx jest --ci --silent && yarn link"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.0.1"
+    "@types/jest": "^26.0.7",
+    "@types/node": "^14.0.24",
+    "jest": "^26.1.0",
+    "ts-jest": "^26.1.4",
+    "typescript": "^3.9.7"
   },
   "dependencies": {
     "ohm-js": "^0.14.0"
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "**/test/**/*.test.(ts|js)"
+    ],
+    "testEnvironment": "node"
   }
 }

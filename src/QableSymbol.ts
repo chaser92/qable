@@ -4,7 +4,6 @@
 // lookup. One can implement an override of iteration-based slices
 // that leverages additional properties of the data structure.
 
-module.exports = {
-    slice: Symbol("Qable.Symbol.slice"),
-    nth: Symbol("Qable.Symbol.nth"),
-};
+export const slice = Symbol("Qable.Symbol.slice");
+export const nth = Symbol("Qable.Symbol.nth");
+export const length = Symbol("Qable.Symbol.length");

@@ -4,6 +4,7 @@ import Qable from "./Qable";
 const GRAMMAR = readFileSync(__dirname + "/grammar.ohm", "utf-8");
 
 import SEMANTICS from "./semantics";
+import QableAsync from "./QableAsync";
 
 class QlangInterpreter {
     private _grammar: ohm.Grammar;
@@ -25,7 +26,7 @@ class QlangInterpreter {
         return this._semantics(this.parse(str)).eval();
     }
 
-    run<T>(str: string, qable: Qable<T>) {
+    run<T>(str: string, qable: Qable<T> | QableAsync<T>) {
         return this.compile(str)(qable);
     }
 }

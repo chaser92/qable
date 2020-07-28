@@ -4,7 +4,7 @@
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "target": "ES2016",
-        "lib": ["es2016", "ES2018.AsyncIterable", "ES2018.AsyncGenerator"],
+        "lib": ["es2016", "ES2018.AsyncIterable", "ES2018.AsyncGenerator", "dom"],
         "noImplicitAny": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,

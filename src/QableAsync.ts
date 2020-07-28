@@ -1,6 +1,6 @@
 import _Qable from "./Qable";
-import * as QableSymbol from "./QableSymbol";
 import { Predicate, Reducer, Mapper } from "./types";
+import query from "./query";
 
 export default class QableAsync<T> {
     iterable: AsyncIterable<T>;
@@ -47,7 +47,7 @@ export default class QableAsync<T> {
     }
 
     query(str: string) {
-        return Qable.query(str, this);
+        return query(str, this);
     }
 
     map<U>(mapper: Mapper<T, U>) {
@@ -120,12 +120,13 @@ export default class QableAsync<T> {
         return result;
     }
 
-    static fromAsyncGeneratorFn<T, U>(asyncGeneratorFn: () => AsyncGenerator<T, U, V>) {
+    static fromAsyncGeneratorFn<T, U, V>(asyncGeneratorFn: () => AsyncGenerator<T, U, V>) {
         return new QableAsync<T>({
             [Symbol.asyncIterator]: asyncGeneratorFn
         });
     }
 
+    /*
     static fromEventEmitter<T>(listener: EventEmitter, event: string) {
         return QableAsync.fromAsyncGeneratorFn(async function*() {
             let resolver: (item: T) => void;
@@ -138,4 +139,5 @@ export default class QableAsync<T> {
                 yield resolver;
         });
     }
+    */
 }

@@ -15,7 +15,7 @@
     "build-n-test": "yarn install && yarn build && yarn lint && npx jest --ci --silent && yarn link"
   },
   "keywords": [],
-  "author": "",
+  "author": "Sigmoidal LLC",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^26.0.7",

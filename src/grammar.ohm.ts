@@ -1,4 +1,4 @@
-Arithmetic {
+const GRAMMAR: string = `Arithmetic {
   Input = 
     Query |
     PropertyGet
@@ -41,7 +41,7 @@ Arithmetic {
   Literal = LNumber | LBool | LString | LNull | LUndefined | Variable 
   LBool = "true" | "false"
   LNumber = digit+
-  LString = "\"" letter+ "\""
+  LString = "\\"" letter+ "\\""
   LVariable = "@"
   LNull = "null"
   LUndefined = "undefined"
@@ -80,4 +80,6 @@ Arithmetic {
   NoStepSlice = LNumberOrNull ":" LNumberOrNull
 
   }
-  
+  `;
+
+  export default GRAMMAR;

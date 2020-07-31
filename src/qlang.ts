@@ -1,7 +1,6 @@
 import ohm from "ohm-js";
-import { readFileSync } from "fs";
 import Qable from "./Qable";
-const GRAMMAR = readFileSync(__dirname + "/grammar.ohm", "utf-8");
+import GRAMMAR from "./grammar.ohm";
 
 import SEMANTICS from "./semantics";
 import QableAsync from "./QableAsync";
